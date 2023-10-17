@@ -1,0 +1,84 @@
+<?php
+include 'config.php';
+session_start();
+
+$cart = mysqli_query($dbconn, 'SELECT * FROM product');
+
+$sum = 0;
+
+if(isset($_SESSION['belanja'])){
+    foreach($_SESSION['belanja'] as $key => $value){
+        $sum += $value ['qty'];
+        $menu = $value['menu'];
+        $id = $value['id'];
+    }
+
+}
+
+
+?>
+
+
+<div class="container">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <td>Menus</td>
+                        <td>Quantity</td>
+                        <td>Price</td>
+                        <td>Total</td>
+                        <td></td>
+                    </tr>
+                </thead>
+                <?php
+                foreach($_SESSION['belanja'] as $key => $value) {
+                ?>
+                <tbody>
+                    <tr>
+                        <td><?=$value['menu']?></td>
+                        <td class="col-md-2"><input type="number" name="qty[]" value="<?=$value['qty']?>" class="form-control"></td>
+                        <td><?=$value['harga']?></td>
+                        <td><?=$value['harga']*$value['qty']?></td>
+                        
+                    </tr>
+                    <?php }?>
+                </tbody>
+            </table>
+            <a href="reset_cart.php">Reset Produksi Harian</a>
+        </div>
+
+        <?php
+include 'config.php';
+session_start();
+
+if(isset($_GET['id']) && is_numeric($_GET['id'])) {    
+    $id = $_GET['id'];
+    if(isset($_POST['qty'])){
+        $qty = max($_POST['qty'],1);
+    }
+
+    
+    $data = mysqli_query($dbconn, "SELECT * FROM product WHERE id_product='$id'");
+    $r = mysqli_fetch_assoc($data);
+
+    $restoran = [
+        'id' => $r['id_product'],
+        'menu' => $r['product_name'],
+        'harga' => $r['price'],
+        'total' => $r['jumlah'],
+        'qty' => $qty
+    ];
+
+    $_SESSION['belanja'][] = $restoran;
+
+    if(isset($_SESSION['belanja'][$id])){
+        $_SESSION['belanja'][$id] = $qty;
+    }else{
+        $_SESSION['belanja'][$id] += $qty;
+    }
+
+
+    ksort($_SESSION['belanja']);
+    header('location:cart.php');
+}
+        ?>
